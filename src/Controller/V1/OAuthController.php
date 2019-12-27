@@ -5,13 +5,8 @@ namespace App\Controller\V1;
 use App\Controller\Base\BaseController;
 use App\Entity\db\OAuthClient;
 use App\Service\OAuthService;
-use DateInterval;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Bridge\PsrHttpMessage\Factory\PsrHttpFactory;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**

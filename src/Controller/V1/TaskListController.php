@@ -3,11 +3,9 @@
 namespace App\Controller\V1;
 
 use App\Controller\Base\BaseController;
-use App\Entity\db\TaskList;
 use App\Others\DataKeeper;
 use App\Service\SimpleTokenService;
 use App\Service\TaskListService;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;

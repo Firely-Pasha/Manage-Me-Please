@@ -4,7 +4,6 @@ namespace App\Controller\V1;
 
 use App\Controller\Base\BaseController;
 use App\Others\DataKeeper;
-use App\Service\OAuthService;
 use App\Service\SimpleTokenService;
 use App\Service\UserService;
 use Symfony\Component\HttpFoundation\JsonResponse;

@@ -4,11 +4,8 @@ namespace App\Controller\V1;
 
 use App\Controller\Base\BaseController;
 use App\Others\DataKeeper;
-use App\Service\BaseService;
 use App\Service\CompanyService;
-use App\Service\OAuthService;
 use App\Service\SimpleTokenService;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;

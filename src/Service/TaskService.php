@@ -62,7 +62,7 @@ class TaskService extends BaseService
     }
 
     public function createTask( /* REQUIRED: */ string $token, int $companyId, string $projectCode, string $name,
-        /* OPTIONAL: */ ?int $assignedToId, ?string $taskListId)
+        /* OPTIONAL: */ ?int $assignedToId, ?string $taskListId): array
     {
         return $this->validateCompanyProject($token, $companyId, $projectCode,
             function (User $user, Company $company, Project $project) use ($name, $assignedToId, $taskListId) {
@@ -81,7 +81,7 @@ class TaskService extends BaseService
                     return $this->createEntityNotFoundResponse('TaskList');
                 }
 
-                $newTask = Task::create($name, $user, $assignedTo, $taskList);
+                $newTask = Task::create($project, $name, $user, $assignedTo, $taskList);
                 return $this->addEntity($this->taskRepository, $newTask,
                     function (Task $task) {
                         return $this->createSuccessfulResponse($this->getSerializer()->taskShort($task));

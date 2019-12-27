@@ -55,7 +55,7 @@ class TaskRepository extends ServiceEntityRepository
     {
         $query = $this->createQueryBuilder('s');
         $query->select('MAX(s.relativeId) AS maxValue');
-        $query->andWhere('s.taskList = :taskList')->setParameter('taskList', $task->getTaskList());
+        $query->andWhere('s.project = :project')->setParameter('project', $task->getProject());
         $maxId = $query->getQuery()->getResult()[0]['maxValue'];
         $task->setRelativeId($maxId + 1);
         try {

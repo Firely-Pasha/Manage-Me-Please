@@ -75,9 +75,10 @@ class Task
      */
     private $deleted;
 
-    public static function create(string $name, User $assignedBy, ?User $assignedTo = null, ?TaskList $taskList = null): self
+    public static function create(Project $project, string $name, User $assignedBy, ?User $assignedTo = null, ?TaskList $taskList = null): self
     {
         $task = (new self())
+            ->setProject($project)
             ->setName($name)
             ->setAssignedBy($assignedBy);
 
@@ -98,6 +99,25 @@ class Task
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * @return Project
+     */
+    public function getProject(): Project
+    {
+        return $this->project;
+    }
+
+    /**
+     * @param Project $project
+     * @return Task
+     */
+    public function setProject(Project $project): self
+    {
+        $this->project = $project;
+
+        return $this;
     }
 
     /**

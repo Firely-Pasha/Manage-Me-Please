@@ -3,11 +3,9 @@
 namespace App\Controller\V1;
 
 use App\Controller\Base\BaseController;
-use App\Others\GetDataKeeper;
 use App\Others\DataKeeper;
 use App\Service\ProjectService;
 use App\Service\SimpleTokenService;
-use Couchbase\RegexpSearchQuery;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;

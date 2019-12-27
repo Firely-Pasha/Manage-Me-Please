@@ -160,9 +160,7 @@ class Serializer
     public function taskFull(Task $task, bool $wrapToObject = false): array
     {
         $data = $this->taskShort($task, false);
-        if ($task->getTaskList() !== null) {
-            $data['project'] = $this->projectShort($task->getProject(), false);
-        }
+        $data['project'] = $this->projectShort($task->getProject(), false);
         return $this->wrapOrNot('task', $wrapToObject, $data);
     }
 

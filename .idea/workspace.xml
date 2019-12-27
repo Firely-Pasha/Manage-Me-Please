@@ -9,6 +9,7 @@
       <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/symfony2.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/.idea/yii2settings.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/config/packages/doctrine.yaml" afterDir="false" />
@@ -40,8 +41,8 @@
       <change afterPath="$PROJECT_DIR$/src/Helpers/Serializer.php" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/Migrations/.gitignore" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/Migrations/Version20191226193450.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/Migrations/Version20191227181238.php" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/Others/DataKeeper.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Others/GetDataKeeper.php" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/Repository/.gitignore" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/Repository/CompanyRepository.php" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/src/Repository/OAuthClientRepository.php" afterDir="false" />
@@ -227,11 +228,6 @@
                 <item name="services root" type="e789fda9:ObjectUtils$Sentinel" />
                 <item name="root:managemeplease_dev@localhost" type="7427dc5b:ServiceModel$ServiceGroupNode" />
               </path>
-              <path>
-                <item name="services root" type="e789fda9:ObjectUtils$Sentinel" />
-                <item name="root:managemeplease_dev@localhost" type="7427dc5b:ServiceModel$ServiceGroupNode" />
-                <item name="com.intellij.database.console.session.MessageBusSession@65c5c56d" type="9fbbdea:ServiceModel$ServiceNode" />
-              </path>
             </expand>
             <select />
           </treeState>
@@ -254,7 +250,7 @@
       <workItem from="1577430339343" duration="1316000" />
       <workItem from="1577467052109" duration="1099000" />
       <workItem from="1577469262518" duration="122000" />
-      <workItem from="1577469394312" duration="897000" />
+      <workItem from="1577469394312" duration="2257000" />
     </task>
     <servers />
   </component>
@@ -304,14 +300,18 @@
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state width="1291" height="278" key="GridCell.Tab.0.right/0.27.1920.1053@0.27.1920.1053" timestamp="1577469487261" />
+    <state x="755" y="479" width="399" height="149" key="NewPhpFileDialog" timestamp="1577472201723">
+      <screen x="0" y="27" width="1920" height="1053" />
+    </state>
+    <state x="755" y="479" width="399" height="149" key="NewPhpFileDialog/0.27.1920.1053@0.27.1920.1053" timestamp="1577472201723" />
     <state x="449" y="188" key="SettingsEditor" timestamp="1577469376149">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
     <state x="449" y="188" key="SettingsEditor/0.27.1920.1053@0.27.1920.1053" timestamp="1577469376149" />
-    <state x="605" y="150" width="709" height="807" key="find.popup" timestamp="1577468730168">
+    <state x="605" y="150" width="709" height="807" key="find.popup" timestamp="1577471547397">
       <screen x="0" y="27" width="1920" height="1053" />
     </state>
-    <state x="605" y="150" width="709" height="807" key="find.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1577468730168" />
+    <state x="605" y="150" width="709" height="807" key="find.popup/0.27.1920.1053@0.27.1920.1053" timestamp="1577471547397" />
     <state x="2863" y="329" width="672" height="678" key="search.everywhere.popup" timestamp="1577431544436">
       <screen x="1920" y="0" width="2560" height="1440" />
     </state>
