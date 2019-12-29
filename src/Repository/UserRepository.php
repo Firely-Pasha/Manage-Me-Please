@@ -50,7 +50,7 @@ class UserRepository extends ServiceEntityRepository
      * @return User
      * @throws NonUniqueResultException
      */
-    public function findByLogin(string $login): User
+    public function findByLogin(string $login): ?User
     {
         return $this->createQueryBuilder('u')
             ->andWhere('u.login = :qLogin')
