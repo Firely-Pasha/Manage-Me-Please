@@ -129,9 +129,16 @@ class BaseService
      */
     public function createResponse($data, int $code): array
     {
+        if ($code < 16) {
+            return [
+                'status' => $code,
+                'data' => $data
+            ];
+        }
+
         return [
             'status' => $code,
-            'data' => $data
+            'errors' => $data
         ];
     }
 
