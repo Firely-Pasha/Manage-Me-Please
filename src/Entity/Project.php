@@ -186,17 +186,17 @@ class Project
     }
 
     /**
-     * @return PersistentCollection
+     * @return PersistentCollection|null
      */
-    public function getTaskLists(): PersistentCollection
+    public function getTaskLists(): ?PersistentCollection
     {
         return $this->taskLists;
     }
 
     /**
-     * @return PersistentCollection
+     * @return PersistentCollection|null
      */
-    public function getTasks(): PersistentCollection
+    public function getTasks(): ?PersistentCollection
     {
         return $this->tasks;
     }

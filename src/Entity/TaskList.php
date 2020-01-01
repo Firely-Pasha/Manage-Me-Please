@@ -97,7 +97,7 @@ class TaskList
     /**
      * @return PersistentCollection
      */
-    public function getTasks(): PersistentCollection
+    public function getTasks(): ?PersistentCollection
     {
         return $this->tasks;
     }

@@ -105,7 +105,10 @@ class Serializer
     public function projectFull(Project $project, bool $wrapToObject = false): array
     {
         $data = $this->projectShort($project, false);
-        $data['taskLists'] = $this->taskListCollection($project->getTaskLists(), false);
+        $taskLists = $project->getTaskLists();
+        if (!empty($taskLists)) {
+            $data['taskLists'] = $this->taskListCollection($project->getTaskLists(), false);
+        }
         return $this->wrapOrNot('project', $wrapToObject, $data);
     }
 
