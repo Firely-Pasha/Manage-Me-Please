@@ -76,12 +76,7 @@ class TaskService extends BaseService
                     }
                 }
 
-                $taskList = $taskListId ? $this->taskListRepository->find($taskListId) : null;
-                if ($taskListId !== null && $taskList === null && $project->getTaskLists()->contains($taskList)) {
-                    return $this->createEntityNotFoundResponse('TaskList');
-                }
-
-                $newTask = Task::create($project, $name, $user, $assignedTo, $taskList);
+                $newTask = Task::create($project, $name, $user, $assignedTo);
                 return $this->addEntity($this->taskRepository, $newTask,
                     function (Task $task) {
                         return $this->createSuccessfulResponse($this->getSerializer()->taskShort($task));

@@ -140,9 +140,9 @@ class Task
     }
 
     /**
-     * @return TaskList
+     * @return TaskList|null
      */
-    public function getTaskList(): TaskList
+    public function getTaskList(): ?TaskList
     {
         return $this->taskList;
     }

@@ -189,7 +189,7 @@ class Serializer
 
     private function createTaskCode(Task $task): string
     {
-        return $task->getTaskList()->getProject()->getCode() . '-' . $task->getRelativeId();
+        return $task->getProject()->getCode() . '-' . $task->getRelativeId();
     }
 
     private function getCollection(PersistentCollection $collection, callable $itemSerializer): array
