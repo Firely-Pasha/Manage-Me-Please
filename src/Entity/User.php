@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Helpers\DateHelper;
 use DateTime;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\PersistentCollection;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -287,5 +289,29 @@ class User implements UserInterface
     public function getTasks(): PersistentCollection
     {
         return $this->tasks;
+    }
+
+    public function getProjectsByCompanyId(int $companyId): Collection
+    {
+        /**
+         * @todo Replace with SQL Query
+         */
+        return $this->projects->filter(
+            static function (Project $project, int $key) use ($companyId) {
+                return $project->getCompany()->getId() === $companyId;
+            }
+        );
+    }
+
+    public function getTasksByCompanyId(int $companyId): Collection
+    {
+        /**
+         * @todo Replace with SQL Query
+         */
+        return $this->tasks->filter(
+            static function (Task $task, int $key) use ($companyId) {
+                return $task->getProject()->getCompany()->getId() === $companyId;
+            }
+        );
     }
 }

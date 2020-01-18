@@ -94,7 +94,8 @@ class UserController extends BaseController
             function (DataKeeper $data, string $token) {
                 return $this->service->getUserTasks(
                     $token,
-                    $data->getIntField('id', true)
+                    $data->getIntField('id', true),
+                    $data->getIntField('companyId', true)
                 );
             }
         );
@@ -128,7 +129,8 @@ class UserController extends BaseController
             function (DataKeeper $data, string $token) {
                 return $this->service->getUserProjects(
                     $token,
-                    $data->getIntField('id', true)
+                    $data->getIntField('id', true),
+                    $data->getIntField('companyId', true)
                 );
             }
         );

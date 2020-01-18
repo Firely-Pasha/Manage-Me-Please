@@ -10,6 +10,7 @@ use App\Entity\SimpleToken;
 use App\Entity\Task;
 use App\Entity\TaskList;
 use App\Entity\User;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\PersistentCollection;
 
 class Serializer
@@ -106,13 +107,13 @@ class Serializer
     {
         $data = $this->projectShort($project, false);
         $taskLists = $project->getTaskLists();
-        if (!empty($taskLists)) {
+        if ($taskLists !== null) {
             $data['taskLists'] = $this->taskListCollection($project->getTaskLists(), false);
         }
         return $this->wrapOrNot('project', $wrapToObject, $data);
     }
 
-    public function projectCollection(PersistentCollection $collection, bool $wrapToObject = false): array
+    public function projectCollection(Collection $collection, bool $wrapToObject = false): array
     {
         return $this->wrapOrNot('projects', $wrapToObject,
             $this->getCollection($collection, function (Project $project) {
@@ -167,7 +168,7 @@ class Serializer
         return $this->wrapOrNot('task', $wrapToObject, $data);
     }
 
-    public function taskCollection(PersistentCollection $taskCollection, bool $wrapToObject = false): array
+    public function taskCollection(Collection $taskCollection, bool $wrapToObject = false): array
     {
         return $this->wrapOrNot('taskLists', $wrapToObject,
             $this->getCollection($taskCollection, function (Task $task) {
@@ -192,7 +193,7 @@ class Serializer
         return $task->getProject()->getCode() . '-' . $task->getRelativeId();
     }
 
-    private function getCollection(PersistentCollection $collection, callable $itemSerializer): array
+    private function getCollection(Collection $collection, callable $itemSerializer): array
     {
         $data = [];
         foreach ($collection as $item) {

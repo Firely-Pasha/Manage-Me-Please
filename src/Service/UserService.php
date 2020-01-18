@@ -4,6 +4,7 @@
 namespace App\Service;
 
 
+use App\Entity\Company;
 use App\Entity\SimpleToken;
 use App\Entity\User;
 use App\Forms\UserLogin;
@@ -107,7 +108,7 @@ class UserService extends BaseService
         return $this->createResponse($this->getSerializer()->accessToken($simpleToken->getId()), self::RESPONSE_CODE_SUCCESS);
     }
 
-    public function getUserTasks(string $token, ?int $userId): array
+    public function getUserTasks(string $token, ?int $userId, ?int $companyId): array
     {
         $currentUser = $this->getSimpleTokenRepository()->find($token)->getUser();
 
@@ -116,8 +117,15 @@ class UserService extends BaseService
             if ($user === null) {
                 return $this->createEntityNotFoundResponse('User');
             }
+            $currentUser = $user;
+        }
 
-            return $this->createSuccessfulResponse($this->getSerializer()->taskCollection($user->getTasks()));
+        if ($companyId !== null) {
+            return $this->validateCompany($token, $companyId,
+                function (User $user, Company $company) use ($currentUser) {
+                    return $this->createSuccessfulResponse($this->getSerializer()->taskCollection($currentUser->getTasksByCompanyId($company->getId())));
+                }
+            );
         }
 
         return $this->createSuccessfulResponse($this->getSerializer()->taskCollection($currentUser->getTasks()));
@@ -139,7 +147,7 @@ class UserService extends BaseService
         return $this->createSuccessfulResponse($this->getSerializer()->companyCollection($currentUser->getCompanies()));
     }
 
-    public function getUserProjects(string $token, ?int $userId): array
+    public function getUserProjects(string $token, ?int $userId, ?int $companyId): array
     {
         $currentUser = $this->getSimpleTokenRepository()->find($token)->getUser();
 
@@ -148,11 +156,17 @@ class UserService extends BaseService
             if ($user === null) {
                 return $this->createEntityNotFoundResponse('User');
             }
+            $currentUser = $user;
+        }
 
-            return $this->createSuccessfulResponse($this->getSerializer()->projectCollection($user->getProjects()));
+        if ($companyId !== null) {
+            return $this->validateCompany($token, $companyId,
+                function (User $user, Company $company) use ($currentUser) {
+                    return $this->createSuccessfulResponse($this->getSerializer()->projectCollection($currentUser->getProjectsByCompanyId($company->getId())));
+                }
+            );
         }
 
         return $this->createSuccessfulResponse($this->getSerializer()->projectCollection($currentUser->getProjects()));
-
     }
 }
