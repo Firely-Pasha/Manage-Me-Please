@@ -10,6 +10,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
+/**
+ * @Route("/v1", name="task_list_api")
+ * Class TaskListController
+ * @package App\Controller\V1
+ */
 class TaskListController extends BaseController
 {
     /**
