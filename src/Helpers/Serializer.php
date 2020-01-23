@@ -106,9 +106,9 @@ class Serializer
     public function projectFull(Project $project, bool $wrapToObject = false): array
     {
         $data = $this->projectShort($project, false);
-        $taskLists = $project->getTaskLists();
+        $taskLists = $project->getTaskListsBySort();
         if ($taskLists !== null) {
-            $data['taskLists'] = $this->taskListCollection($project->getTaskLists(), false);
+            $data['taskLists'] = $this->taskListCollection($taskLists, false);
         }
         return $this->wrapOrNot('project', $wrapToObject, $data);
     }
@@ -136,7 +136,7 @@ class Serializer
         return $this->wrapOrNot('taskList', $wrapToObject, $data);
     }
 
-    public function taskListCollection(PersistentCollection $collection, bool $wrapToObject = false): array
+    public function taskListCollection(Collection $collection, bool $wrapToObject = false): array
     {
         return $this->wrapOrNot('taskLists', $wrapToObject,
             $this->getCollection($collection, function (TaskList $taskList) {

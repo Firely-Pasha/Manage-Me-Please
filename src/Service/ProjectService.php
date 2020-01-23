@@ -99,4 +99,38 @@ class ProjectService extends BaseService
             }
         );
     }
+
+    public function sortTaskLists(string $token, ?int $companyId, ?string $projectCode, ?array $sort, ?array $deletions): array
+    {
+        return $this->validateCompanyProject($token, $companyId, $projectCode,
+            function (User $currentUser, Company $company, Project $project) use ($sort, $deletions) {
+                $taskLists = $project->getTaskLists();
+
+                /**
+                 * @var $taskList TaskList
+                 */
+
+                if (!empty($sort)) {
+                    foreach ($taskLists as $taskList) {
+                        $taskList->setSort($sort[$taskList->getRelativeId()] ?? 0);
+                        if (!$this->taskListRepository->update($taskList)) {
+                            return $this->createDatabaseErrorResponse('Couldn\'t change sort of ' . $taskList->getName() . '.');
+                        }
+                    }
+                }
+
+                if (!empty($deletions)) {
+                    foreach ($taskLists as $taskList) {
+                        if (in_array($taskList->getRelativeId(), $deletions, true)) {
+                            $taskList->setDeleted(true);
+                            $this->taskListRepository->update($taskList);
+                        }
+                    }
+                }
+
+
+                return $this->createSuccessfulResponse([]);
+            }
+        );
+    }
 }

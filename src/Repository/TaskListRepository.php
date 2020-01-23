@@ -3,11 +3,13 @@
 namespace App\Repository;
 
 use App\Entity\TaskList;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
+use Psr\Log\LoggerInterface;
 
 /**
  * @method TaskList|null find($id, $lockMode = null, $lockVersion = null)
@@ -17,9 +19,15 @@ use Doctrine\ORM\ORMException;
  */
 class TaskListRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    public function __construct(ManagerRegistry $registry, LoggerInterface $logger)
     {
         parent::__construct($registry, TaskList::class);
+        $this->logger = $logger;
     }
 
     // /**
@@ -66,6 +74,18 @@ class TaskListRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush($taskList);
             return true;
         } catch (ORMException | UniqueConstraintViolationException | OptimisticLockException $e) {
+            $this->logger->error($e->getMessage());
+            return false;
+        }
+    }
+
+    public function update(TaskList $taskList): bool
+    {
+        try {
+            $this->getEntityManager()->flush($taskList);
+            return true;
+        } catch (ORMException | UniqueConstraintViolationException | OptimisticLockException $e) {
+            $this->logger->error($e->getMessage());
             return false;
         }
     }

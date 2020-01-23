@@ -58,4 +58,17 @@ class DataKeeper
 
         return '';
     }
+
+    public function getAssocField(string $fieldName, bool $nullable = false): ?array
+    {
+        if (isset($this->data[$fieldName]) && is_array($this->data[$fieldName])) {
+            return $this->data[$fieldName];
+        }
+
+        if ($nullable) {
+            return null;
+        }
+
+        return [];
+    }
 }

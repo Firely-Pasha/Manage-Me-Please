@@ -2,9 +2,14 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\Common\Collections\Expr\Expression;
+use Doctrine\Common\Collections\Expr\Value;
 use Doctrine\DBAL\Driver\AbstractOracleDriver\EasyConnectString;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\PersistentCollection;
+use Doctrine\ORM\Query\Expr;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -188,9 +193,9 @@ class Project
     /**
      * @return PersistentCollection|null
      */
-    public function getTaskLists(): ?PersistentCollection
+    public function getTaskLists(): ?Collection
     {
-        return $this->taskLists;
+        return $this->taskLists->matching($this->getDefaultTaskListCriteria());
     }
 
     /**
@@ -210,5 +215,24 @@ class Project
         $this->tasks = $tasks;
 
         return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getTaskListsBySort(): Collection
+    {
+        $activeCriteria = $this->getDefaultTaskListCriteria()
+            ->orderBy([
+                'sort' => Criteria::ASC
+            ]);
+        return $this->taskLists->matching($activeCriteria);
+    }
+
+
+    private function getDefaultTaskListCriteria(): Criteria
+    {
+        return Criteria::create()
+            ->where(Criteria::expr()->eq('deleted', false));
     }
 }

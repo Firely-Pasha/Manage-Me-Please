@@ -3,6 +3,7 @@
 namespace App\Controller\V1;
 
 use App\Controller\Base\BaseController;
+use App\Helpers\Constants;
 use App\Others\DataKeeper;
 use App\Service\ProjectService;
 use App\Service\SimpleTokenService;
@@ -63,6 +64,25 @@ class ProjectController extends BaseController
                     /* BODY */
                     $data->getStringField('code'),
                     $data->getStringField('name')
+                );
+            }
+        );
+    }
+
+
+    /**
+     * @Route("/project/task-lists/sort", name="project_task_lists_sort", methods={"POST"})
+     */
+    public function sortTaskList(Request $request)
+    {
+        return $this->handlePostData($request, true,
+            function (DataKeeper $data, $token) {
+                return $this->service->sortTaskLists(
+                    $token,
+                    $data->getIntField(Constants::PARAM_COMPANY_ID),
+                    $data->getStringField(Constants::PARAM_PROJECT_CODE),
+                    $data->getAssocField(Constants::BODY_SORT, true),
+                    $data->getIntArrayField(Constants::BODY_DELETIONS)
                 );
             }
         );

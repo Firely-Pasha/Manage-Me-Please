@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\PersistentCollection;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -44,11 +45,25 @@ class TaskList
      */
     private $tasks;
 
+    /**
+     * @ORM\Column(type="integer")
+     * @var integer
+     */
+    private $sort;
+
+    /**
+     * @ORM\Column(type="boolean")
+     * @var boolean
+     */
+    private $deleted;
+
     public static function create(string $name, Project $project): self
     {
         return (new self())
             ->setName($name)
-            ->setProject($project);
+            ->setProject($project)
+            ->setSort(0)
+            ->setDeleted(false);
     }
 
     public function getId(): ?int
@@ -117,6 +132,44 @@ class TaskList
     public function setRelativeId(int $relativeId): self
     {
         $this->relativeId = $relativeId;
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSort(): int
+    {
+        return $this->sort;
+    }
+
+    /**
+     * @param int $sort
+     * @return TaskList
+     */
+    public function setSort(int $sort): self
+    {
+        $this->sort = $sort;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDeleted(): bool
+    {
+        return $this->deleted;
+    }
+
+    /**
+     * @param bool $deleted
+     * @return TaskList
+     */
+    public function setDeleted(bool $deleted): self
+    {
+        $this->deleted = $deleted;
 
         return $this;
     }
