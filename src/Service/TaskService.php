@@ -61,8 +61,8 @@ class TaskService extends BaseService
         );
     }
 
-    public function createTask( /* REQUIRED: */ string $token, int $companyId, string $projectCode, string $name,
-        /* OPTIONAL: */ ?int $assignedToId, ?string $taskListId): array
+    public function createTask( /* REQUIRED: */ string $token, int $companyId, string $projectCode, string $name, int $taskListId,
+        /* OPTIONAL: */ ?int $assignedToId): array
     {
         return $this->validateCompanyProject($token, $companyId, $projectCode,
             function (User $user, Company $company, Project $project) use ($name, $assignedToId, $taskListId) {
@@ -75,8 +75,11 @@ class TaskService extends BaseService
                         return $this->createResponse(['Assigned user is not in this project'], self::RESPONSE_CODE_FAIL_PERMISSION_DENIED);
                     }
                 }
-
-                $newTask = Task::create($project, $name, $user, $assignedTo);
+                $taskList = $taskListId ? $this->taskListRepository->findOneByRelativeId($project, $taskListId) : null;
+                if ($taskList === null) {
+                    return $this->createEntityNotFoundResponse('TaskList');
+                }
+                $newTask = Task::create($project, $name, $user, $taskList, $assignedTo);
                 return $this->addEntity($this->taskRepository, $newTask,
                     function (Task $task) {
                         return $this->createSuccessfulResponse($this->getSerializer()->taskShort($task));

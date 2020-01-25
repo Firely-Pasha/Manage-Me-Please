@@ -75,19 +75,16 @@ class Task
      */
     private $deleted;
 
-    public static function create(Project $project, string $name, User $assignedBy, ?User $assignedTo = null, ?TaskList $taskList = null): self
+    public static function create(Project $project, string $name, User $assignedBy, TaskList $taskList, ?User $assignedTo = null): self
     {
         $task = (new self())
             ->setProject($project)
             ->setName($name)
-            ->setAssignedBy($assignedBy);
+            ->setAssignedBy($assignedBy)
+            ->setTaskList($taskList);
 
         if ($assignedTo !== null) {
             $task->setAssignedTo($assignedTo);
-        }
-
-        if ($taskList !== null) {
-            $task->setTaskList($taskList);
         }
 
         $task->setDeleted(false);

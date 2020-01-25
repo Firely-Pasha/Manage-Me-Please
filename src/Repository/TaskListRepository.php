@@ -2,11 +2,14 @@
 
 namespace App\Repository;
 
+use App\Entity\Project;
+use App\Entity\Task;
 use App\Entity\TaskList;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Psr\Log\LoggerInterface;
@@ -59,7 +62,20 @@ class TaskListRepository extends ServiceEntityRepository
     }
     */
 
+    public function findOneByRelativeId(Project $project, int $relativeId): ?TaskList
+    {
+        try {
+            return $this->createQueryBuilder('t')
+                ->andWhere('t.project = :proj')->setParameter('proj', $project)
+                ->andWhere('t.relativeId = :rid')->setParameter('rid', $relativeId)
+                ->getQuery()
+                ->getOneOrNullResult();
+        } catch (NonUniqueResultException $e) {
+            $this->logger->error($e->getMessage());
+            return null;
+        }
 
+    }
 
     public function add(TaskList $taskList): bool
     {

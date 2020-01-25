@@ -42,7 +42,7 @@ class TaskListController extends BaseController
                     $token,
                     $dataKeeper->getIntField('companyId'),
                     $dataKeeper->getStringField('projectCode'),
-                    $dataKeeper->getIntField('id')
+                    $dataKeeper->getIntField('taskListId')
                 );
             }
         );

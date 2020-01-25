@@ -133,6 +133,7 @@ class Serializer
     public function taskListFull(TaskList $taskList, bool $wrapToObject = false): array
     {
         $data = $this->taskListSort($taskList, false);
+        $data['tasks'] = $this->taskCollection($taskList->getTasks());
         return $this->wrapOrNot('taskList', $wrapToObject, $data);
     }
 

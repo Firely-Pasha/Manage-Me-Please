@@ -54,7 +54,7 @@ class TaskController extends BaseController
                     $token,
                     $data->getIntField('companyId'),
                     $data->getStringField('projectCode'),
-                    $data->getIntField('id')
+                    $data->getIntField('taskId')
                 );
             }
         );
@@ -76,8 +76,8 @@ class TaskController extends BaseController
                     $data->getStringField('projectCode'),
                     /* BODY */
                     $data->getStringField('name'),
-                    $data->getIntField('assignedToId', true),
-                    $data->getIntField('taskListId', true)
+                    $data->getIntField('taskListId'),
+                    $data->getIntField('assignedToId', true)
                 );
             }
         );
