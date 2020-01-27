@@ -61,11 +61,12 @@ class TaskService extends BaseService
         );
     }
 
-    public function createTask( /* REQUIRED: */ string $token, int $companyId, string $projectCode, string $name, int $taskListId,
-        /* OPTIONAL: */ ?int $assignedToId): array
+    public function createTask(
+        /* REQUIRED: */ string $token, int $companyId, string $projectCode, string $name, int $taskListId,
+        /* OPTIONAL: */ ?int $assignedToId, ?string $description): array
     {
         return $this->validateCompanyProject($token, $companyId, $projectCode,
-            function (User $user, Company $company, Project $project) use ($name, $assignedToId, $taskListId) {
+            function (User $user, Company $company, Project $project) use ($name, $assignedToId, $taskListId, $description) {
                 $assignedTo = $assignedToId ? $this->getUserRepository()->find($assignedToId) : null;
                 if ($assignedToId !== null) {
                     if ($assignedTo === null || !$company->getEmployees()->contains($assignedTo)) {
@@ -79,7 +80,7 @@ class TaskService extends BaseService
                 if ($taskList === null) {
                     return $this->createEntityNotFoundResponse('TaskList');
                 }
-                $newTask = Task::create($project, $name, $user, $taskList, $assignedTo);
+                $newTask = Task::create($project, $name, $user, $taskList, $assignedTo, $description);
                 return $this->addEntity($this->taskRepository, $newTask,
                     function (Task $task) {
                         return $this->createSuccessfulResponse($this->getSerializer()->taskShort($task));

@@ -36,6 +36,11 @@ class Task
      */
     private $name;
 
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     * @var string
+     */
+    private $description;
 
 //    private $section;
 
@@ -75,7 +80,7 @@ class Task
      */
     private $deleted;
 
-    public static function create(Project $project, string $name, User $assignedBy, TaskList $taskList, ?User $assignedTo = null): self
+    public static function create(Project $project, string $name, User $assignedBy, TaskList $taskList, ?User $assignedTo = null, ?string $description): self
     {
         $task = (new self())
             ->setProject($project)
@@ -85,6 +90,10 @@ class Task
 
         if ($assignedTo !== null) {
             $task->setAssignedTo($assignedTo);
+        }
+
+        if ($description !== null) {
+            $task->setDescription($description);
         }
 
         $task->setDeleted(false);
@@ -132,6 +141,25 @@ class Task
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param string $description
+     * @return Task
+     */
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
 
         return $this;
     }

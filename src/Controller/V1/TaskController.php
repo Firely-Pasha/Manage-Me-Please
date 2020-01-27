@@ -77,7 +77,8 @@ class TaskController extends BaseController
                     /* BODY */
                     $data->getStringField('name'),
                     $data->getIntField('taskListId'),
-                    $data->getIntField('assignedToId', true)
+                    $data->getIntField('assignedToId', true),
+                    $data->getStringField('description', true)
                 );
             }
         );
