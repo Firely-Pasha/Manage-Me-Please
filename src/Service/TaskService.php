@@ -56,7 +56,7 @@ class TaskService extends BaseService
                     return $this->createEntityNotFoundResponse('Task');
                 }
 
-                return $this->createSuccessfulResponse($this->getSerializer()->taskFull($task, true));
+                return $this->createSuccessfulResponse($this->getSerializer()->taskFull($task, false));
             }
         );
     }
