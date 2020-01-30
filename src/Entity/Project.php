@@ -195,6 +195,9 @@ class Project
      */
     public function getTaskLists(): ?Collection
     {
+        if ($this->taskLists === null) {
+            return null;
+        }
         return $this->taskLists->matching($this->getDefaultTaskListCriteria());
     }
 
@@ -220,8 +223,11 @@ class Project
     /**
      * @return Collection
      */
-    public function getTaskListsBySort(): Collection
+    public function getTaskListsBySort(): ?Collection
     {
+        if ($this->taskLists === null) {
+            return null;
+        }
         $activeCriteria = $this->getDefaultTaskListCriteria()
             ->orderBy([
                 'sort' => Criteria::ASC
