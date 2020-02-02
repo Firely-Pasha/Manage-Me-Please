@@ -4,14 +4,21 @@
 namespace App\Service;
 
 
+use App\DataManager\DataBaseManager;
 use App\Entity\Company;
 use App\Entity\Project;
+use App\Entity\Tag;
+use App\Entity\TagGroup;
+use App\Entity\Task;
 use App\Entity\TaskList;
 use App\Entity\User;
 use App\Helpers\Serializer;
+use App\Repository\ColorRepository;
 use App\Repository\CompanyRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\SimpleTokenRepository;
+use App\Repository\TagGroupRepository;
+use App\Repository\TagRepository;
 use App\Repository\TaskListRepository;
 use App\Repository\UserRepository;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -23,10 +30,28 @@ class ProjectService extends BaseService
      */
     private $taskListRepository;
 
-    public function __construct(Serializer $serializer, ValidatorInterface $validator, SimpleTokenRepository $simpleTokenRepository, CompanyRepository $companyRepository, ProjectRepository $projectRepository, UserRepository $userRepository, TaskListRepository $taskListRepository)
+    /**
+     * @var TagGroupRepository
+     */
+    private $tagGroupRepository;
+
+    /**
+     * @var ColorRepository
+     */
+    private $colorRepository;
+
+    /**
+     * @var TagRepository
+     */
+    private $tagRepository;
+
+    public function __construct(Serializer $serializer, ValidatorInterface $validator, SimpleTokenRepository $simpleTokenRepository, CompanyRepository $companyRepository, ProjectRepository $projectRepository, UserRepository $userRepository, TaskListRepository $taskListRepository, TagGroupRepository $tagGroupRepository, TagRepository $tagRepository, ColorRepository $colorRepository)
     {
         parent::__construct($serializer, $validator, $simpleTokenRepository, $companyRepository, $projectRepository, $userRepository);
         $this->taskListRepository = $taskListRepository;
+        $this->tagGroupRepository = $tagGroupRepository;
+        $this->colorRepository = $colorRepository;
+        $this->tagRepository = $tagRepository;
     }
 
     public function getProject(string $token, int $companyId, string $projectCode): array
@@ -129,6 +154,49 @@ class ProjectService extends BaseService
                 }
 
 
+                return $this->createSuccessfulResponse([]);
+            }
+        );
+    }
+
+    public function getTags(string $token, int $companyId, string $projectCode)
+    {
+        return $this->validateCompanyProject($token, $companyId, $projectCode,
+            function (User $currentUser, Company $company, Project $project) {
+                return $this->createSuccessfulResponse($this->getSerializer()->tagCollection($project->getTags()));
+            }
+        );
+    }
+
+    public function addTag(string $token, int $companyId, string $projectCode, string $tagTitle, string $tagColorCode, ?string $tagGroupId): array
+    {
+        return $this->validateCompanyProject($token, $companyId, $projectCode,
+            function (User $currentUser, Company $company, Project $project) use ($tagTitle, $tagColorCode, $tagGroupId) {
+                $tagGroup = $this->tagGroupRepository->findOneBy(['project' => $project, 'relativeId' => $tagGroupId]);
+                $color = $this->colorRepository->findOneBy(['code' => $tagColorCode]);
+                $tag = Tag::create($project, $tagGroup, $tagTitle, $color);
+                $result = $this->tagRepository->add($tag);
+                if ($result) {
+                    return $this->createDatabaseErrorResponse($result);
+                }
+                return $this->createSuccessfulResponse($this->getSerializer()->tagShort($tag));
+            }
+        );
+    }
+
+    public function delete(string $token, int $companyId, string $projectCode, string $tagId): array
+    {
+        return $this->validateCompanyProject($token, $companyId, $projectCode,
+            function (User $user, Company $company, Project $project) use ($tagId) {
+                $tag = $this->tagRepository->findOneBy(['project' => $project, 'relativeId' => $tagId]);
+                if ($tag === null) {
+                    return $this->createEntityNotFoundResponse('Tag');
+                }
+                $tag->setDeleted(true);
+                $result = $this->tagRepository->update($tag);
+                if ($result) {
+                    return $this->createDatabaseErrorResponse($result);
+                }
                 return $this->createSuccessfulResponse([]);
             }
         );

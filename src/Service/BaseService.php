@@ -5,6 +5,7 @@ namespace App\Service;
 
 
 use App\Entity\Company;
+use App\Entity\Project;
 use App\Entity\User;
 use App\Helpers\Serializer;
 use App\Repository\CompanyRepository;

@@ -32,10 +32,11 @@ class DataKeeper
     {
         $currentData = $this->data[$fieldName];
         if (isset($currentData) && is_array($currentData)) {
-            foreach ($currentData as $currentItem) {
+            foreach ($currentData as &$currentItem) {
                 if (!is_numeric($currentItem)) {
                     return [];
                 }
+                $currentItem = (int)$currentItem;
             }
             return $currentData;
         }

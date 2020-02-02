@@ -7,6 +7,7 @@ namespace App\Helpers;
 use App\Entity\Company;
 use App\Entity\Project;
 use App\Entity\SimpleToken;
+use App\Entity\Tag;
 use App\Entity\Task;
 use App\Entity\TaskList;
 use App\Entity\User;
@@ -159,6 +160,9 @@ class Serializer
         if ($task->getTaskList() !== null) {
             $data['taskList'] = $this->taskListSort($task->getTaskList(), false);
         }
+        if ($task->getTags() !== null) {
+            $data['tags'] = $this->tagCollection($task->getTags());
+        }
         return $this->wrapOrNot('task', $wrapToObject, $data);
     }
 
@@ -175,6 +179,26 @@ class Serializer
         return $this->wrapOrNot('taskLists', $wrapToObject,
             $this->getCollection($taskCollection, function (Task $task) {
                 return $this->taskShort($task);
+            })
+        );
+    }
+
+    public function tagShort(Tag $tag): array
+    {
+        $data = [];
+        $data['id'] = $tag->getRelativeId();
+        $data['title'] = $tag->getTitle();
+        if ($tag->getColor() !== null) {
+            $data['color'] = $tag->getColor()->getCode();
+        }
+        return $data;
+    }
+
+    public function tagCollection(Collection $tagCollection, bool $wrapToObject = false): array
+    {
+        return $this->wrapOrNot('tags', $wrapToObject,
+            $this->getCollection($tagCollection, function (Tag $tag) {
+                return $this->tagShort($tag);
             })
         );
     }

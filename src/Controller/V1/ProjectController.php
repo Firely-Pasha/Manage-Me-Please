@@ -126,4 +126,64 @@ class ProjectController extends BaseController
             }
         );
     }
+
+    /**
+     * @Route("/project/tags", name="project_tags_get", methods={"GET"})
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getTags(Request $request): JsonResponse
+    {
+        return $this->handleGetData($request, true,
+            function (DataKeeper $data, string $token) {
+                return $this->service->getTags(
+                    $token,
+                    // QUERY
+                    $data->getIntField(Constants::PARAM_COMPANY_ID),
+                    $data->getStringField(Constants::PARAM_PROJECT_CODE)
+                );
+            }
+        );
+    }
+
+    /**
+     * @Route("/project/tags", name="project_tags_add", methods={"POST"})
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function addTag(Request $request): JsonResponse
+    {
+        return $this->handlePostData($request, true,
+            function (DataKeeper $data, string $token) {
+                return $this->service->addTag(
+                    $token,
+                    $data->getIntField(Constants::PARAM_COMPANY_ID),
+                    $data->getStringField(Constants::PARAM_PROJECT_CODE),
+
+                    $data->getStringField(Constants::BODY_TAG_TITLE),
+                    $data->getStringField(Constants::BODY_TAG_COLOR_CODE),
+                    $data->getStringField(Constants::BODY_TAG_GROUP_ID, true)
+                );
+            }
+        );
+    }
+
+    /**
+     * @Route("/project/tags", name="project_tags_delete", methods={"DELETE"})
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function deleteTag(Request $request): JsonResponse
+    {
+        return $this->handleGetData($request, true,
+            function (DataKeeper $data, string $token) {
+                return $this->service->delete(
+                    $token,
+                    $data->getIntField(Constants::PARAM_COMPANY_ID),
+                    $data->getStringField(Constants::PARAM_PROJECT_CODE),
+                    $data->getIntField(Constants::PARAM_TAG_ID)
+                );
+            }
+        );
+    }
 }

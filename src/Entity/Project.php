@@ -26,7 +26,7 @@ class Project
 
     /**
      * @ORM\ManyToOne(targetEntity="Company")
-     * @ORM\JoinColumn()
+     * @ORM\JoinColumn(name="company_id", referencedColumnName="id")
      * @Assert\NotBlank(message="Project must be attached to company")
      * @var Company
      */
@@ -56,31 +56,50 @@ class Project
 
     /**
      * @ORM\ManyToMany(targetEntity="User", mappedBy="projects")
-     * @var PersistentCollection
+     * @var Collection
      */
     private $users;
 
     /**
      * @ORM\OneToMany(targetEntity="TaskList", mappedBy="project")
      * @ORM\JoinColumn()
-     * @var PersistentCollection
+     * @var Collection
      */
     private $taskLists;
 
     /**
      * @ORM\OneToMany(targetEntity="TaskSection", mappedBy="project")
      * @ORM\JoinColumn()
-     * @var PersistentCollection
+     * @var Collection
      */
     private $taskSections;
 
     /**
      * @ORM\OneToMany(targetEntity="Task", mappedBy="project")
      * @ORM\JoinColumn()
-     * @var PersistentCollection
+     * @var Collection
      */
     private $tasks;
 
+    /**
+     * @ORM\OneToMany(targetEntity="TagGroup", mappedBy="project")
+     * @var Collection
+     */
+    private $tagGroups;
+
+    /**
+     * @ORM\OneToMany(targetEntity="Tag", mappedBy="project")
+     * @var Collection
+     */
+    private $tags;
+
+    /**
+     * @param User $user
+     * @param Company $company
+     * @param string $code
+     * @param string $name
+     * @return Project
+     */
     public static function create(User $user, Company $company, string $code, string $name): Project
     {
         return (new self())
@@ -198,7 +217,7 @@ class Project
         if ($this->taskLists === null) {
             return null;
         }
-        return $this->taskLists->matching($this->getDefaultTaskListCriteria());
+        return $this->taskLists->matching(TaskList::getCriteria());
     }
 
     /**
@@ -223,22 +242,35 @@ class Project
     /**
      * @return Collection
      */
+    public function getTagGroups(): ?Collection
+    {
+        return $this->tagGroups;
+    }
+
+    /**
+     * @return bool|Collection|null
+     */
+    public function getTags(): ?Collection
+    {
+        if ($this->tags === null) {
+            return null;
+        }
+
+        return $this->tags->matching(Tag::getCriteria());
+    }
+
+    /**
+     * @return Collection
+     */
     public function getTaskListsBySort(): ?Collection
     {
         if ($this->taskLists === null) {
             return null;
         }
-        $activeCriteria = $this->getDefaultTaskListCriteria()
+        $activeCriteria = TaskList::getCriteria()
             ->orderBy([
                 'sort' => Criteria::ASC
             ]);
         return $this->taskLists->matching($activeCriteria);
-    }
-
-
-    private function getDefaultTaskListCriteria(): Criteria
-    {
-        return Criteria::create()
-            ->where(Criteria::expr()->eq('deleted', false));
     }
 }

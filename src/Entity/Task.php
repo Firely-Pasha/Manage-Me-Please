@@ -2,7 +2,10 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\PersistentCollection;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -80,13 +83,30 @@ class Task
      */
     private $deleted;
 
-    public static function create(Project $project, string $name, User $assignedBy, TaskList $taskList, ?User $assignedTo = null, ?string $description): self
+    /**
+     * @ORM\ManyToMany(targetEntity="Tag", inversedBy="tasks")
+     * @var PersistentCollection
+     */
+    private $tags;
+
+    /**
+     * @param Project $project
+     * @param string $name
+     * @param User $assignedBy
+     * @param TaskList $taskList
+     * @param User|null $assignedTo
+     * @param string|null $description
+     * @param Tag[] $tags
+     * @return static
+     */
+    public static function create(Project $project, string $name, User $assignedBy, TaskList $taskList, ?User $assignedTo = null, ?string $description, array $tags): self
     {
         $task = (new self())
             ->setProject($project)
             ->setName($name)
             ->setAssignedBy($assignedBy)
-            ->setTaskList($taskList);
+            ->setTaskList($taskList)
+            ->initTags();
 
         if ($assignedTo !== null) {
             $task->setAssignedTo($assignedTo);
@@ -94,6 +114,10 @@ class Task
 
         if ($description !== null) {
             $task->setDescription($description);
+        }
+
+        if ($tags !== null) {
+            $task->addTags($tags);
         }
 
         $task->setDeleted(false);
@@ -255,6 +279,49 @@ class Task
     public function setDeleted(bool $deleted): self
     {
         $this->deleted = $deleted;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getTags(): Collection
+    {
+        return $this->tags->matching(Tag::getCriteria());
+    }
+
+    public function initTags(): self
+    {
+        $this->tags = new ArrayCollection();
+        return $this;
+    }
+
+    public function addTag(Tag $tag): self
+    {
+        if (!$this->tags->contains($tag)) {
+            $this->tags->add($tag);
+        }
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): self
+    {
+        if ($this->tags->contains($tag)) {
+            $this->tags->removeElement($tag);
+        }
+        return $this;
+    }
+
+    /**
+     * @param Tag[] $tags
+     * @return $this
+     */
+    public function addTags(array $tags): self
+    {
+        foreach ($tags as $tag) {
+            $this->tags->add($tag);
+        }
 
         return $this;
     }

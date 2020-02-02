@@ -173,4 +173,10 @@ class TaskList
 
         return $this;
     }
+
+    public static function getCriteria(): Criteria
+    {
+        return Criteria::create()
+            ->where(Criteria::expr()->eq('deleted', false));
+    }
 }
