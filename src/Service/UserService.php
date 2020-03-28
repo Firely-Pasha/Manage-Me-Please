@@ -8,11 +8,11 @@ use App\Entity\Company;
 use App\Entity\SimpleToken;
 use App\Entity\User;
 use App\Forms\UserLogin;
+use App\Helpers\Serializer;
 use App\Repository\CompanyRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\SimpleTokenRepository;
 use App\Repository\UserRepository;
-use App\Helpers\Serializer;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\Tests\Encoder\PasswordEncoder;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -168,5 +168,30 @@ class UserService extends BaseService
         }
 
         return $this->createSuccessfulResponse($this->getSerializer()->projectCollection($currentUser->getProjects()));
+    }
+
+    public function getUserWorkLogs(
+        string $token, ?int $userId, ?int $companyId
+    )
+    {
+        $currentUser = $this->getSimpleTokenRepository()->find($token)->getUser();
+
+        if ($userId !== null) {
+            $user = $this->getUserRepository()->find($userId);
+            if ($user === null) {
+                return $this->createEntityNotFoundResponse('User');
+            }
+            $currentUser = $user;
+        }
+
+        if ($companyId !== null) {
+            return $this->validateCompany($token, $companyId,
+                function (User $user, Company $company) use ($currentUser) {
+                    return $this->createSuccessfulResponse($this->getSerializer()->workLogCollection($currentUser->getWorkLogsByCompanyId($company->getId())));
+                }
+            );
+        }
+
+        return $this->createSuccessfulResponse($this->getSerializer()->projectCollection($currentUser->getWorkLogs()));
     }
 }

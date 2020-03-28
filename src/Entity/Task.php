@@ -90,6 +90,12 @@ class Task
     private $tags;
 
     /**
+     * @ORM\OneToMany(targetEntity="WorkLog", mappedBy="task")
+     * @var PersistentCollection
+     */
+    private $workLogs;
+
+    /**
      * @param Project $project
      * @param string $name
      * @param User $assignedBy
@@ -324,5 +330,16 @@ class Task
         }
 
         return $this;
+    }
+
+    /**
+     * @return PersistentCollection
+     */
+    public function getWorkLogs(): Collection
+    {
+        if ($this->workLogs == null) {
+            return new ArrayCollection();
+        }
+        return $this->workLogs;
     }
 }

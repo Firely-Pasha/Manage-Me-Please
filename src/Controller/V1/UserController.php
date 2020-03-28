@@ -135,4 +135,22 @@ class UserController extends BaseController
             }
         );
     }
+
+    /**
+     * @Route("/user/worklogs", name="user_worklogs_get", methods={"GET"})
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getWorkLogs(Request $request): JsonResponse
+    {
+        return $this->handleGetData($request, true,
+            function (DataKeeper $data, string $token) {
+                return $this->service->getUserWorklogs(
+                    $token,
+                    $data->getIntField('id', true),
+                    $data->getIntField('companyId', true)
+                );
+            }
+        );
+    }
 }

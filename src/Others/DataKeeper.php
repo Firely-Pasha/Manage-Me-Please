@@ -28,17 +28,19 @@ class DataKeeper
         return 0;
     }
 
-    public function getIntArrayField(string $fieldName, bool $nullable = false): array
+    public function getIntArrayField(string $fieldName, bool $nullable = false): ?array
     {
-        $currentData = $this->data[$fieldName];
-        if (isset($currentData) && is_array($currentData)) {
-            foreach ($currentData as &$currentItem) {
-                if (!is_numeric($currentItem)) {
-                    return [];
+        if (isset($this->data[$fieldName])) {
+            $currentData = $this->data[$fieldName];
+            if (is_array($currentData)) {
+                foreach ($currentData as &$currentItem) {
+                    if (!is_numeric($currentItem)) {
+                        return [];
+                    }
+                    $currentItem = (int)$currentItem;
                 }
-                $currentItem = (int)$currentItem;
+                return $currentData;
             }
-            return $currentData;
         }
 
         if ($nullable) {

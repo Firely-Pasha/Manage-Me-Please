@@ -11,6 +11,7 @@ use App\Entity\Tag;
 use App\Entity\Task;
 use App\Entity\TaskList;
 use App\Entity\User;
+use App\Entity\WorkLog;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\PersistentCollection;
 
@@ -50,6 +51,7 @@ class Serializer
         $data['name'] = $user->getName();
         $data['surname'] = $user->getSurname();
         $data['createDate'] = DateHelper::datetimeToString($user->getCreateDate());
+        $data['unfinishedWorkLogs'] = $this->workLogCollection($user->getUnfinishedWorkLogs());
         return $this->wrapOrNot('user', $wrapToObject, $data);
     }
 
@@ -171,6 +173,7 @@ class Serializer
         $data = $this->taskShort($task, false);
         $data['description'] = $task->getDescription();
         $data['project'] = $this->projectShort($task->getProject(), false);
+        $data['workLogs'] = $this->workLogCollection($task->getWorkLogs());
         return $this->wrapOrNot('task', $wrapToObject, $data);
     }
 
@@ -199,6 +202,38 @@ class Serializer
         return $this->wrapOrNot('tags', $wrapToObject,
             $this->getCollection($tagCollection, function (Tag $tag) {
                 return $this->tagShort($tag);
+            })
+        );
+    }
+
+    /**
+     * @param WorkLog $workLog
+     * @return array
+     */
+    public function workLogShort(WorkLog $workLog): array
+    {
+        $data = [];
+        $data['id'] = $workLog->getRelativeId();
+        $data['task'] = $workLog->getTask()->getRelativeId();
+        $data['user'] = $this->userShort($workLog->getUser());
+        $data['timeStart'] = DateHelper::datetimeToString($workLog->getTimeStart());
+        if (!empty($workLog->getTimeEnd())) {
+            $data['timeEnd'] = DateHelper::datetimeToString($workLog->getTimeEnd());
+        }
+        $data['comment'] = $workLog->getComment();
+        return $data;
+    }
+
+    /**
+     * @param Collection $workLogCollection
+     * @param bool $wrapToObject
+     * @return array
+     */
+    public function workLogCollection(Collection $workLogCollection, bool $wrapToObject = false): array
+    {
+        return $this->wrapOrNot('workLogs', $wrapToObject,
+            $this->getCollection($workLogCollection, function (WorkLog $workLog) {
+                return $this->workLogShort($workLog);
             })
         );
     }

@@ -4,12 +4,8 @@ namespace App\Entity;
 
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Common\Collections\Expr\Expression;
-use Doctrine\Common\Collections\Expr\Value;
-use Doctrine\DBAL\Driver\AbstractOracleDriver\EasyConnectString;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\PersistentCollection;
-use Doctrine\ORM\Query\Expr;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -272,5 +268,9 @@ class Project
                 'sort' => Criteria::ASC
             ]);
         return $this->taskLists->matching($activeCriteria);
+    }
+
+    public function doesUserBelong(User $user) {
+        return $this->getUsers()->contains($user);
     }
 }

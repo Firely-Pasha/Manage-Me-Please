@@ -7,7 +7,6 @@ use App\Helpers\Constants;
 use App\Others\DataKeeper;
 use App\Service\SimpleTokenService;
 use App\Service\TaskService;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -66,7 +65,7 @@ class TaskController extends BaseController
                     $data->getStringField('projectCode'),
                     /* BODY */
                     $data->getStringField('name'),
-                    $data->getIntField('taskListId'),
+                    $data->getIntField('taskListId', true),
                     $data->getIntField('assignedToId', true),
                     $data->getStringField('description', true),
                     $data->getIntArrayField(Constants::BODY_TAG_IDS, true)
@@ -106,13 +105,38 @@ class TaskController extends BaseController
     {
         return $this->handleGetData($request, true,
             function (DataKeeper $data, string $token) {
-                return $this->service->remove(
+                return $this->service->removeTags(
                     $token,
                     /* QUERY */
                     $data->getIntField(Constants::PARAM_COMPANY_ID),
                     $data->getStringField(Constants::PARAM_PROJECT_CODE),
                     $data->getStringField(Constants::PARAM_TASK_ID),
                     $data->getIntArrayField(Constants::PARAM_TAG_IDS));
+            }
+        );
+    }
+
+    /**
+     * @Route("/task/worklog", name="task_worklog", methods={"POST"})
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function addWorkLog(Request $request): JsonResponse {
+        return $this->handlePostData($request, true,
+            function (DataKeeper $data, string $token) {
+                return $this->service->addWorkLog(
+                    $token,
+                    /* QUERY */
+                    $data->getIntField(Constants::PARAM_COMPANY_ID),
+                    $data->getStringField(Constants::PARAM_PROJECT_CODE),
+                    $data->getIntField(Constants::PARAM_TASK_ID),
+                    /* BODY */
+                    $data->getIntField(Constants::BODY_USER_ID, true),
+                    $data->getIntField(Constants::BODY_WORK_LOG_ID, true),
+                    $data->getIntField(Constants::BODY_START_TIME, true),
+                    $data->getIntField(Constants::BODY_END_TIME, true),
+                    $data->getStringField(Constants::BODY_COMMENT, true)
+                );
             }
         );
     }

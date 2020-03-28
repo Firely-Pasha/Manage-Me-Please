@@ -93,6 +93,12 @@ class User implements UserInterface
      */
     private $tasks;
 
+    /**
+     * @ORM\OneToMany(targetEntity="WorkLog", mappedBy="user")
+     * @var PersistentCollection
+     */
+    private $workLogs;
+
     public function __construct(string $identifier = null)
     {
         $this->create_date = new DateTime();
@@ -291,6 +297,14 @@ class User implements UserInterface
         return $this->tasks;
     }
 
+    /**
+     * @return PersistentCollection
+     */
+    public function getWorkLogs(): PersistentCollection
+    {
+        return $this->workLogs;
+    }
+
     public function getProjectsByCompanyId(int $companyId): Collection
     {
         /**
@@ -313,5 +327,24 @@ class User implements UserInterface
                 return $task->getProject()->getCompany()->getId() === $companyId;
             }
         );
+    }
+
+    public function getWorkLogsByCompanyId(int $companyId) {
+        return $this->getWorkLogs()->filter(
+            static function (WorkLog $workLog, int $key) use ($companyId) {
+                return $workLog->getTask()->getProject()->getCompany()->getId() === $companyId;
+            }
+        );
+    }
+
+    public function getUnfinishedWorkLogs(): Collection
+    {
+        /**
+         * @todo Replace with SQL Query
+         */
+        return $this->getWorkLogs()
+            ->matching(
+                Criteria::create()->where(Criteria::expr()->eq('time_end', null))
+            );
     }
 }
