@@ -9,6 +9,7 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 /**
@@ -19,12 +20,21 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
  */
 class UserRepository extends ServiceEntityRepository
 {
+    /**
+     * @var UserPasswordEncoderInterface
+     */
     private $passwordEncoder;
 
-    public function __construct(ManagerRegistry $registry, UserPasswordEncoderInterface $passwordEncoder)
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    public function __construct(ManagerRegistry $registry, UserPasswordEncoderInterface $passwordEncoder, LoggerInterface $logger)
     {
         parent::__construct($registry, User::class);
         $this->passwordEncoder = $passwordEncoder;
+        $this->logger = $logger;
     }
 
     // /**
@@ -84,6 +94,7 @@ class UserRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush($user);
             return true;
         } catch (ORMException | UniqueConstraintViolationException | OptimisticLockException $e) {
+            $this->logger->error($e->getMessage());
             return false;
         }
     }
@@ -94,6 +105,7 @@ class UserRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush($user);
             return true;
         } catch (ORMException | UniqueConstraintViolationException | OptimisticLockException $e) {
+            $this->logger->error($e->getMessage());
             return false;
         }
     }

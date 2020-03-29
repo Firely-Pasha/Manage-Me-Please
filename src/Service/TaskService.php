@@ -10,6 +10,9 @@ use App\Entity\Tag;
 use App\Entity\Task;
 use App\Entity\User;
 use App\Entity\WorkLog;
+use App\Exceptions\AccessException;
+use App\Exceptions\DatabaseException;
+use App\Exceptions\EntityNotFoundException;
 use App\Helpers\Serializer;
 use App\Repository\CompanyRepository;
 use App\Repository\ProjectRepository;
@@ -58,8 +61,15 @@ class TaskService extends BaseService
         $this->workLogRepository = $workLogRepository;
     }
 
-    public function getTask(/* REQUIRED: */ string $token, int $companyId, string $projectCode, string $taskId
-        /* OPTIONAL: */): array
+    /**
+     * @param string $token
+     * @param int $companyId
+     * @param string $projectCode
+     * @param string $taskId
+     * @return array
+     * @throws EntityNotFoundException
+     */
+    public function getTask(string $token, int $companyId, string $projectCode, string $taskId): array
     {
         return $this->validateCompanyProject($token, $companyId, $projectCode,
             function (User $user, Company $company, Project $project) use ($taskId) {
@@ -69,14 +79,26 @@ class TaskService extends BaseService
                     'deleted' => false
                 ]);
                 if ($task === null) {
-                    return $this->createEntityNotFoundResponse('Task');
+                    throw new EntityNotFoundException('Task');
                 }
 
-                return $this->createSuccessfulResponse($this->getSerializer()->taskFull($task, false));
+                return $this->getSerializer()->taskFull($task, false);
             }
         );
     }
 
+    /**
+     * @param string $token
+     * @param int $companyId
+     * @param string $projectCode
+     * @param string $name
+     * @param int|null $taskListId
+     * @param int|null $assignedToId
+     * @param string|null $description
+     * @param array|null $tagIds
+     * @return array
+     * @throws EntityNotFoundException
+     */
     public function createTask(
         /* REQUIRED: */ string $token, int $companyId, string $projectCode, string $name,
         /* OPTIONAL: */ ?int $taskListId, ?int $assignedToId, ?string $description, ?array $tagIds
@@ -88,17 +110,17 @@ class TaskService extends BaseService
                 $assignedTo = $assignedToId ? $this->getUserRepository()->find($assignedToId) : null;
                 if ($assignedToId !== null) {
                     if ($assignedTo === null || !$company->getEmployees()->contains($assignedTo)) {
-                        return $this->createEntityNotFoundResponse('AssignedTo');
+                        throw new EntityNotFoundException('AssignedTo');
                     }
                     if (!$project->getUsers()->contains($assignedTo)) {
-                        return $this->createResponse(['Assigned user is not in this project'], self::RESPONSE_CODE_FAIL_PERMISSION_DENIED);
+                        throw new AccessException('Assigned user is not in this project');
                     }
                 }
 
                 // TASKLIST
                 $taskList = $taskListId ? $this->taskListRepository->findOneByRelativeId($project, $taskListId) : null;
                 if (empty($taskListId) && $project->getTaskLists()->count() != 0 || !empty($taskListId) && $taskList === null) {
-                    return $this->createEntityNotFoundResponse('TaskList');
+                    throw new EntityNotFoundException('TaskList');
                 }
 
                 // TAGS
@@ -108,7 +130,7 @@ class TaskService extends BaseService
                 $newTask = Task::create($project, $name, $user, $taskList, $assignedTo, $description, $tags);
                 return $this->addEntity($this->taskRepository, $newTask,
                     function (Task $task) {
-                        return $this->createSuccessfulResponse($this->getSerializer()->taskShort($task));
+                        return $this->getSerializer()->taskShort($task);
                     }
                 );
             }
@@ -122,6 +144,7 @@ class TaskService extends BaseService
      * @param int $taskId
      * @param int[] $tagIds
      * @return array
+     * @throws EntityNotFoundException
      */
     public function addTag(
         /* REQUIRED: */ string $token, int $companyId, string $projectCode, int $taskId, array $tagIds
@@ -135,13 +158,22 @@ class TaskService extends BaseService
                 }
                 $result = $this->taskRepository->update($task);
                 if ($result) {
-                    return $this->createDatabaseErrorResponse($result);
+                    throw new DatabaseException($result);
                 }
-                return $this->createSuccessfulResponse($this->getSerializer()->taskFull($task));
+                return $this->getSerializer()->taskFull($task);
             }
         );
     }
 
+    /**
+     * @param string $token
+     * @param int $companyId
+     * @param string $projectCode
+     * @param int $taskId
+     * @param array $tagIds
+     * @return array
+     * @throws EntityNotFoundException
+     */
     public function removeTags(string $token, int $companyId, string $projectCode, int $taskId, array $tagIds): array
     {
         return $this->validateCompanyProjectTask($token, $companyId, $projectCode, $taskId,
@@ -153,22 +185,36 @@ class TaskService extends BaseService
                     $task->removeTag($preparedTag);
                 }
                 $this->taskRepository->update($task);
-                return $this->createSuccessfulResponse($this->getSerializer()->taskFull($task));
+                return $this->getSerializer()->taskFull($task);
             }
         );
     }
 
+    /**
+     * @param string $token
+     * @param int $companyId
+     * @param string $projectCode
+     * @param int $taskId
+     * @param int|null $userId
+     * @param int|null $workLogId
+     * @param int|null $startTime
+     * @param int|null $endTime
+     * @param string|null $comment
+     * @return array
+     * @throws EntityNotFoundException
+     */
     public function addWorkLog(
-        /* REQUIRED: */ string $token, int $companyId, string $projectCode, int $taskId,
-        /* OPTIONAL: */ ?int $userId, ?int $workLogId, ?int $startTime, ?int $endTime, ?string $comment
-    ): array {
+        string $token, int $companyId, string $projectCode, int $taskId,
+        ?int $userId, ?int $workLogId, ?int $startTime, ?int $endTime, ?string $comment
+    ): array
+    {
         return $this->validateCompanyProjectTask($token, $companyId, $projectCode, $taskId,
             function (User $user, Company $company, Project $project, Task $task) use ($userId, $workLogId, $startTime, $endTime, $comment) {
                 if (!empty($userId)) {
                     $user = $this->getUserRepository()->find($userId);
                 }
                 if (!$project->doesUserBelong($user)) {
-                    return $this->createEntityNotFoundResponse('Project');
+                    throw new EntityNotFoundException('Project');
                 }
                 if (!empty($workLogId)) {
                     $workLog = $this->workLogRepository->findOneBy([
@@ -176,7 +222,7 @@ class TaskService extends BaseService
                         'relative_id' => $workLogId
                     ]);
                     if ($workLog == null) {
-                        return $this->createEntityNotFoundResponse('Work Log');
+                        throw new EntityNotFoundException('Work Log');
                     }
                     if (!empty($startTime)) {
                         $workLog->setTimeStart($startTime);
@@ -189,22 +235,34 @@ class TaskService extends BaseService
                 } else {
                     $workLog = WorkLog::create($task, $user, $startTime, $endTime, $comment);
                     if (!$this->workLogRepository->add($workLog)) {
-                        return $this->createDatabaseErrorResponse('Couldn\'t add work log');
+                        throw new DatabaseException('Couldn\'t add work log');
                     }
                 }
-                return $this->createSuccessfulResponse($this->getSerializer()->workLogShort($workLog));
+                return $this->getSerializer()->workLogShort($workLog);
             }
         );
     }
 
+    /**
+     * @param string|null $token
+     * @param int $companyId
+     * @param string $projectCode
+     * @param int $taskId
+     * @param callable $onSuccess
+     * @return array
+     * @throws EntityNotFoundException
+     */
     protected function validateCompanyProjectTask(?string $token, int $companyId, string $projectCode, int $taskId, callable $onSuccess): array
     {
         return $this->validateCompanyProject($token, $companyId, $projectCode,
             function (User $user, Company $company, Project $project) use ($taskId, $onSuccess) {
-                $task = $this->taskRepository->findOneBy(['relativeId' => $taskId, 'project' => $project]);
+                $task = $this->taskRepository->findOneBy([
+                    'relativeId' => $taskId,
+                    'project' => $project
+                ]);
 
                 if ($task === null) {
-                    return $this->createEntityNotFoundResponse('Task');
+                    throw new EntityNotFoundException('Task');
                 }
 
                 return $onSuccess($user, $company, $project, $task);

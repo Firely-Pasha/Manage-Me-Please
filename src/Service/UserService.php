@@ -7,12 +7,17 @@ namespace App\Service;
 use App\Entity\Company;
 use App\Entity\SimpleToken;
 use App\Entity\User;
+use App\Exceptions\AccessException;
+use App\Exceptions\DatabaseException;
+use App\Exceptions\DataValidationException;
+use App\Exceptions\EntityNotFoundException;
 use App\Forms\UserLogin;
 use App\Helpers\Serializer;
 use App\Repository\CompanyRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\SimpleTokenRepository;
 use App\Repository\UserRepository;
+use Doctrine\ORM\NonUniqueResultException;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\Tests\Encoder\PasswordEncoder;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -24,6 +29,16 @@ class UserService extends BaseService
      */
     private $passwordEncoder;
 
+    /**
+     * UserService constructor.
+     * @param Serializer $serializer
+     * @param ValidatorInterface $validator
+     * @param SimpleTokenRepository $simpleTokenRepository
+     * @param CompanyRepository $companyRepository
+     * @param ProjectRepository $projectRepository
+     * @param UserRepository $userRepository
+     * @param UserPasswordEncoderInterface $passwordEncoder
+     */
     public function __construct(Serializer $serializer, ValidatorInterface $validator,
                                 SimpleTokenRepository $simpleTokenRepository, CompanyRepository $companyRepository,
                                 ProjectRepository $projectRepository, UserRepository $userRepository,
@@ -33,24 +48,40 @@ class UserService extends BaseService
         $this->passwordEncoder = $passwordEncoder;
     }
 
+    /**
+     * @param string|null $token
+     * @param int|null $userId
+     * @return array
+     * @throws EntityNotFoundException
+     */
     public function getUser(?string $token, ?int $userId): array
     {
         if ($userId !== null) {
             $user = $this->getUserRepository()->find($userId);
             if ($user === null) {
-                return $this->createEntityNotFoundResponse('User');
+                throw new EntityNotFoundException('User');
             }
-            return $this->createResponse($this->getSerializer()->userFull($user), self::RESPONSE_CODE_SUCCESS);
+            return $this->getSerializer()->userFull($user);
         }
 
         $currentUser = $token ? $this->getSimpleTokenRepository()->find($token)->getUser() : null;
         if ($currentUser !== null) {
-            return $this->createResponse($this->getSerializer()->userFull($currentUser), self::RESPONSE_CODE_SUCCESS);
+            return $this->getSerializer()->userFull($currentUser);
         }
 
-        return $this->createEntityNotFoundResponse('User');
+        throw new EntityNotFoundException('User');
     }
 
+    /**
+     * @param $login
+     * @param $email
+     * @param $password
+     * @param $name
+     * @param $surname
+     * @return array
+     * @throws DataValidationException
+     * @throws DatabaseException
+     */
     public function register($login, $email, $password, $name, $surname): array
     {
         $user = new User();
@@ -62,11 +93,11 @@ class UserService extends BaseService
 
         $errors = $this->getValidator()->validate($user);
         if ($errors->count()) {
-            return $this->createValidationListErrorResponse($errors);
+            throw new DataValidationException($errors);
         }
 
         if (!$this->getUserRepository()->addUser($user)) {
-            return $this->createResponse(["Couldn't create user"], self::RESPONSE_CODE_FAIL_VALIDATION);
+            throw new DatabaseException('Couldn\'t create user');
         }
 
         $simpleToken = (new SimpleToken())
@@ -75,9 +106,17 @@ class UserService extends BaseService
 
         $this->getSimpleTokenRepository()->createToken($simpleToken);
 
-        return $this->createResponse($this->getSerializer()->registrationSuccess($user, $simpleToken), self::RESPONSE_CODE_SUCCESS);
+        return $this->getSerializer()->registrationSuccess($user, $simpleToken);
     }
 
+    /**
+     * @param $login
+     * @param $password
+     * @return array|string[]
+     * @throws DataValidationException
+     * @throws NonUniqueResultException
+     * @throws AccessException
+     */
     public function login($login, $password)
     {
         $userLoginParams = new UserLogin();
@@ -86,7 +125,7 @@ class UserService extends BaseService
 
         $errors = $this->getValidator()->validate($userLoginParams);
         if ($errors->count()) {
-            return $this->createValidationListErrorResponse($errors);
+            throw new DataValidationException($errors);
         }
 
         $user = $this->getUserRepository()->findByLogin($userLoginParams->getLogin());
@@ -96,7 +135,7 @@ class UserService extends BaseService
 
         $isPasswordValid = $this->passwordEncoder->isPasswordValid($user, $userLoginParams->getPassword());
         if (!$isPasswordValid) {
-            return $this->createValidationErrorResponse(['Password is invalid']);
+            throw new AccessException('Password is invalid');
         }
 
         $simpleToken = (new SimpleToken())
@@ -105,9 +144,16 @@ class UserService extends BaseService
 
         $this->getSimpleTokenRepository()->createToken($simpleToken);
 
-        return $this->createResponse($this->getSerializer()->accessToken($simpleToken->getId()), self::RESPONSE_CODE_SUCCESS);
+        return $this->getSerializer()->accessToken($simpleToken->getId());
     }
 
+    /**
+     * @param string $token
+     * @param int|null $userId
+     * @param int|null $companyId
+     * @return array
+     * @throws EntityNotFoundException
+     */
     public function getUserTasks(string $token, ?int $userId, ?int $companyId): array
     {
         $currentUser = $this->getSimpleTokenRepository()->find($token)->getUser();
@@ -115,7 +161,7 @@ class UserService extends BaseService
         if ($userId !== null) {
             $user = $this->getUserRepository()->find($userId);
             if ($user === null) {
-                return $this->createEntityNotFoundResponse('User');
+                throw new EntityNotFoundException('User');
             }
             $currentUser = $user;
         }
@@ -123,14 +169,20 @@ class UserService extends BaseService
         if ($companyId !== null) {
             return $this->validateCompany($token, $companyId,
                 function (User $user, Company $company) use ($currentUser) {
-                    return $this->createSuccessfulResponse($this->getSerializer()->taskCollection($currentUser->getTasksByCompanyId($company->getId())));
+                    return $this->getSerializer()->taskCollection($currentUser->getTasksByCompanyId($company->getId()));
                 }
             );
         }
 
-        return $this->createSuccessfulResponse($this->getSerializer()->taskCollection($currentUser->getTasks()));
+        return $this->getSerializer()->taskCollection($currentUser->getTasks());
     }
 
+    /**
+     * @param string $token
+     * @param int|null $userId
+     * @return array|null
+     * @throws EntityNotFoundException
+     */
     public function getUserCompanies(string $token, ?int $userId): ?array
     {
         $currentUser = $this->getSimpleTokenRepository()->find($token)->getUser();
@@ -138,15 +190,22 @@ class UserService extends BaseService
         if ($userId !== null) {
             $user = $this->getUserRepository()->find($userId);
             if ($user === null) {
-                return $this->createEntityNotFoundResponse('User');
+                throw new EntityNotFoundException('User');
             }
 
-            return $this->createSuccessfulResponse($this->getSerializer()->companyCollection($user->getCompanies()));
+            return $this->getSerializer()->companyCollection($user->getCompanies());
         }
 
-        return $this->createSuccessfulResponse($this->getSerializer()->companyCollection($currentUser->getCompanies()));
+        return $this->getSerializer()->companyCollection($currentUser->getCompanies());
     }
 
+    /**
+     * @param string $token
+     * @param int|null $userId
+     * @param int|null $companyId
+     * @return array
+     * @throws EntityNotFoundException
+     */
     public function getUserProjects(string $token, ?int $userId, ?int $companyId): array
     {
         $currentUser = $this->getSimpleTokenRepository()->find($token)->getUser();
@@ -154,7 +213,7 @@ class UserService extends BaseService
         if ($userId !== null) {
             $user = $this->getUserRepository()->find($userId);
             if ($user === null) {
-                return $this->createEntityNotFoundResponse('User');
+                throw new EntityNotFoundException('User');
             }
             $currentUser = $user;
         }
@@ -162,24 +221,29 @@ class UserService extends BaseService
         if ($companyId !== null) {
             return $this->validateCompany($token, $companyId,
                 function (User $user, Company $company) use ($currentUser) {
-                    return $this->createSuccessfulResponse($this->getSerializer()->projectCollection($currentUser->getProjectsByCompanyId($company->getId())));
+                    return $this->getSerializer()->projectCollection($currentUser->getProjectsByCompanyId($company->getId()));
                 }
             );
         }
 
-        return $this->createSuccessfulResponse($this->getSerializer()->projectCollection($currentUser->getProjects()));
+        return $this->getSerializer()->projectCollection($currentUser->getProjects());
     }
 
-    public function getUserWorkLogs(
-        string $token, ?int $userId, ?int $companyId
-    )
+    /**
+     * @param string $token
+     * @param int|null $userId
+     * @param int|null $companyId
+     * @return array
+     * @throws EntityNotFoundException
+     */
+    public function getUserWorkLogs(string $token, ?int $userId, ?int $companyId)
     {
         $currentUser = $this->getSimpleTokenRepository()->find($token)->getUser();
 
         if ($userId !== null) {
             $user = $this->getUserRepository()->find($userId);
             if ($user === null) {
-                return $this->createEntityNotFoundResponse('User');
+                throw new EntityNotFoundException('User');
             }
             $currentUser = $user;
         }
@@ -187,11 +251,11 @@ class UserService extends BaseService
         if ($companyId !== null) {
             return $this->validateCompany($token, $companyId,
                 function (User $user, Company $company) use ($currentUser) {
-                    return $this->createSuccessfulResponse($this->getSerializer()->workLogCollection($currentUser->getWorkLogsByCompanyId($company->getId())));
+                    return $this->getSerializer()->workLogCollection($currentUser->getWorkLogsByCompanyId($company->getId()));
                 }
             );
         }
 
-        return $this->createSuccessfulResponse($this->getSerializer()->projectCollection($currentUser->getWorkLogs()));
+        return $this->getSerializer()->projectCollection($currentUser->getWorkLogs());
     }
 }

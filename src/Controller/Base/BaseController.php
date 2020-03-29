@@ -4,6 +4,7 @@
 namespace App\Controller\Base;
 
 
+use App\Exceptions\MmpException;
 use App\Others\DataKeeper;
 use App\Service\BaseService;
 use App\Service\SimpleTokenService;
@@ -86,14 +87,15 @@ abstract class BaseController extends AbstractController
     }
 
     /**
-     * @todo Make auth first, then handle data
      * @param Request $request
      * @param array $data
      * @param $isAuthRequired
      * @param callable $dataHandler
      * @return JsonResponse
+     * @todo Make auth first, then handle data
      */
-    private function handleData(Request $request, array $data, $isAuthRequired, callable $dataHandler) {
+    private function handleData(Request $request, array $data, $isAuthRequired, callable $dataHandler)
+    {
         $token = $request->headers->get('Authorization');
         if (!empty($token)) {
             $token = str_replace('Simple ', '', $token);
@@ -106,7 +108,18 @@ abstract class BaseController extends AbstractController
                 return $this->createJsonResponse($this->simpleTokenService->createResponse($errors[1], $errors[0]));
             }
         }
-        $result = $dataHandler(new DataKeeper($data), $token);
+        try {
+            $result = [
+                'status' => MmpException::RESPONSE_CODE_SUCCESS,
+                'data' => $dataHandler(new DataKeeper($data), $token)
+            ];
+        } catch (MmpException $mmpException) {
+            $result = [
+                'status' => $mmpException->getCode(),
+                'error' => $mmpException->getMessage(),
+                'additionalInfo' => $mmpException->getAdditionalInfo()
+            ];
+        }
         return $this->createJsonResponse($result);
 
     }

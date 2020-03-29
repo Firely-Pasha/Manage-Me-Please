@@ -6,6 +6,10 @@ namespace App\Service;
 
 use App\Entity\Company;
 use App\Entity\User;
+use App\Exceptions\AccessException;
+use App\Exceptions\DatabaseException;
+use App\Exceptions\DataValidationException;
+use App\Exceptions\EntityNotFoundException;
 use App\Helpers\Serializer;
 use App\Repository\CompanyRepository;
 use App\Repository\ProjectRepository;
@@ -129,17 +133,7 @@ class BaseService
      */
     public function createResponse($data, int $code): array
     {
-        if ($code < 16) {
-            return [
-                'status' => $code,
-                'data' => $data
-            ];
-        }
-
-        return [
-            'status' => $code,
-            'errors' => $data
-        ];
+        return $data;
     }
 
     public function createSuccessfulResponse(array $data): array
@@ -157,19 +151,6 @@ class BaseService
         $errorList = [];
         foreach ($errors as $error) {
             $errorList[] = $error->getMessage();
-        }
-        return $this->createResponse($errorList, self::RESPONSE_CODE_FAIL_VALIDATION);
-    }
-
-    /**
-     * @param array $errors
-     * @return string[]
-     */
-    protected function createValidationErrorResponse(array $errors): array
-    {
-        $errorList = [];
-        foreach ($errors as $error) {
-            $errorList[] = $error;
         }
         return $this->createResponse($errorList, self::RESPONSE_CODE_FAIL_VALIDATION);
     }
@@ -196,19 +177,33 @@ class BaseService
         return $this->createResponse([$message], self::RESPONSE_CODE_FAIL_DATABASE);
     }
 
-
+    /**
+     * @param string|null $token
+     * @param int $companyId
+     * @param callable $onSuccess
+     * @return array
+     * @throws EntityNotFoundException
+     */
     protected function validateCompany(?string $token, int $companyId, callable $onSuccess): array
     {
         $user = $token ? $this->getSimpleTokenRepository()->find($token)->getUser() : null;
 
         $company = $this->getCompanyRepository()->find($companyId);
         if ($company === null || ($token !== null && !$company->getEmployees()->contains($user))) {
-            return $this->createEntityNotFoundResponse('Company');
+            throw new EntityNotFoundException('Company');
         }
 
         return $onSuccess($user, $company);
     }
 
+    /**
+     * @param string|null $token
+     * @param int $companyId
+     * @param string $projectCode
+     * @param callable $onSuccess
+     * @return array
+     * @throws EntityNotFoundException
+     */
     protected function validateCompanyProject(?string $token, int $companyId, string $projectCode, callable $onSuccess): array
     {
         return $this->validateCompany($token, $companyId,
@@ -216,11 +211,11 @@ class BaseService
                 $project = $this->getProjectRepository()->findOneBy(['company' => $company, 'code' => $projectCode]);
 
                 if ($project === null) {
-                    return $this->createEntityNotFoundResponse('Project');
+                    throw new EntityNotFoundException('Project');
                 }
 
                 if (!$project->getUsers()->contains($user)) {
-                    return $this->createResponse(['You have no access to this project'], self::RESPONSE_CODE_FAIL_PERMISSION_DENIED);
+                    throw new AccessException('You have no access to this project');
                 }
 
                 return $onSuccess($user, $company, $project);
@@ -228,15 +223,23 @@ class BaseService
         );
     }
 
+    /**
+     * @param ServiceEntityRepository $repository
+     * @param $entity
+     * @param callable $onSuccess
+     * @return array|null
+     * @throws DataValidationException
+     * @throws DatabaseException
+     */
     protected function addEntity(ServiceEntityRepository $repository, $entity, callable $onSuccess): ?array
     {
         $errors = $this->getValidator()->validate($entity);
         if ($errors->count()) {
-            return $this->createValidationListErrorResponse($errors);
+            throw new DataValidationException($errors);
         }
 
         if (!$repository->add($entity)) {
-            return $this->createResponse(["Couldn't create entity"], self::RESPONSE_CODE_FAIL_DATABASE);
+            throw new DatabaseException('Couldn\'t create entity');
         }
 
         return $onSuccess($entity);
