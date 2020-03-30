@@ -8,6 +8,7 @@ use App\Entity\Company;
 use App\Entity\Project;
 use App\Entity\TaskList;
 use App\Entity\User;
+use App\Exceptions\EntityNotFoundException;
 use App\Helpers\Serializer;
 use App\Repository\CompanyRepository;
 use App\Repository\ProjectRepository;
@@ -33,6 +34,14 @@ class TaskListService extends BaseService
         $this->taskListRepository = $taskListRepository;
     }
 
+    /**
+     * @param string $token
+     * @param int $companyId
+     * @param string $projectCode
+     * @param int $listId
+     * @return array
+     * @throws EntityNotFoundException
+     */
     public function getTaskList(string $token, int $companyId, string $projectCode, int $listId): array
     {
         return $this->validateCompanyProject($token, $companyId, $projectCode,
@@ -42,14 +51,22 @@ class TaskListService extends BaseService
                     'relativeId' => $listId
                 ]);
                 if ($taskList === null) {
-                    return $this->createEntityNotFoundResponse('Task list');
+                    throw new EntityNotFoundException('Task list');
                 }
 
-                return $this->createSuccessfulResponse($this->getSerializer()->taskListFull($taskList));
+                return $this->getSerializer()->taskListFull($taskList);
             }
         );
     }
 
+    /**
+     * @param string $token
+     * @param int $companyId
+     * @param string $projectCode
+     * @param string $name
+     * @return array
+     * @throws EntityNotFoundException
+     */
     public function createTaskList(string $token, int $companyId, string $projectCode, string $name): array
     {
         return $this->validateCompanyProject($token, $companyId, $projectCode,
@@ -57,7 +74,7 @@ class TaskListService extends BaseService
                 $taskList = TaskList::create($name, $project);
                 return $this->addEntity($this->taskListRepository, $taskList,
                     function (TaskList $taskList) {
-                        return $this->createSuccessfulResponse($this->getSerializer()->taskListFull($taskList));
+                        return $this->getSerializer()->taskListFull($taskList);
                     }
                 );
             }
